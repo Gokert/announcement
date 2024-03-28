@@ -1,4 +1,4 @@
 .idea
-/images
+images/
 docker-compose.yaml
 Dockerfile
