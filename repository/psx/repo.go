@@ -18,6 +18,7 @@ type IRepository interface {
 	GetUserId(login string) (uint64, error)
 
 	GetAnnouncements(page, pageSize uint64) ([]models.Announcement, error)
+	GetAnnouncement(id uint64) (*models.Announcement, error)
 	SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
 }
 
@@ -129,6 +130,20 @@ func (repo *Repository) GetAnnouncements(page uint64, pageSize uint64) ([]models
 	}
 
 	return announcements, nil
+}
+
+func (repo *Repository) GetAnnouncement(id uint64) (*models.Announcement, error) {
+	var announcement models.Announcement
+
+	err := repo.db.QueryRow("SELECT announcement.header, announcement.photo_href, announcement.info, announcement.cost FROM announcement WHERE announcement.id = $1", id).Scan(&announcement.Header, &announcement.Info, &announcement.Photo, &announcement.Cost)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("select announcement error: %s", err.Error())
+	}
+
+	return &announcement, nil
 }
 
 func (repo *Repository) SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {

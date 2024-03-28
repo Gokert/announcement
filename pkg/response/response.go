@@ -17,7 +17,7 @@ func SendResponse(w http.ResponseWriter, r *http.Request, response *models.Respo
 		return
 	}
 
-	log.Infof("Time: %v, Method: %s, Status: %d, URL: %s", time.Now(), r.Method, response.Status, r.URL.Path)
+	log.Infof("Time: %v, Address: %s, Method: %s, Status: %d, URL: %s", time.Now(), r.RemoteAddr, r.Method, response.Status, r.URL.Path)
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(jsonResponse)

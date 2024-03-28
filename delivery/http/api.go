@@ -32,7 +32,8 @@ func GetApi(core *usecase.Core, log *logrus.Logger) *Api {
 	api.mx.HandleFunc("/logout", api.Logout)
 	api.mx.HandleFunc("/authcheck", api.AuthAccept)
 
-	api.mx.HandleFunc("/api/v1/announcements/:id", api.GetAnnouncements)
+	api.mx.HandleFunc("/api/v1/announcements", api.GetAnnouncement)
+	api.mx.HandleFunc("/api/v1/announcements/list", api.GetAnnouncements)
 	api.mx.HandleFunc("/api/v1/announcements/search", api.SearchAnnouncements)
 	api.mx.Handle("/api/v1/announcements/create", middleware.AuthCheck(http.HandlerFunc(api.CreateAnnouncement), core, log))
 
@@ -301,6 +302,36 @@ func (a *Api) GetAnnouncements(w http.ResponseWriter, r *http.Request) {
 		Count:         uint64(len(announcements)),
 		Announcements: announcements,
 	}
+
+	httpResponse.SendResponse(w, r, &response, a.log)
+}
+
+func (a *Api) GetAnnouncement(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{Status: http.StatusOK, Body: nil}
+
+	if r.Method != http.MethodGet {
+		response.Status = http.StatusMethodNotAllowed
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	annId, err := strconv.ParseUint(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		a.log.Error("Parse id error: ", err.Error())
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	announcement, err := a.core.GetAnnouncement(annId)
+	if err != nil {
+		a.log.Error("Get announcement error: ", err.Error())
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	response.Body = announcement
 
 	httpResponse.SendResponse(w, r, &response, a.log)
 }

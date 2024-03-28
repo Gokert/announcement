@@ -24,6 +24,7 @@ type ICore interface {
 	FindUserByLogin(login string) (bool, error)
 
 	GetAnnouncements(page uint64, pageSize uint64) ([]models.Announcement, error)
+	GetAnnouncement(id uint64) (*models.Announcement, error)
 	SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
 }
 
@@ -167,6 +168,15 @@ func (c *Core) GetAnnouncements(page uint64, pageSize uint64) ([]models.Announce
 	}
 
 	return announcements, nil
+}
+
+func (c *Core) GetAnnouncement(id uint64) (*models.Announcement, error) {
+	announcement, err := c.announcements.GetAnnouncement(id)
+	if err != nil {
+		return nil, fmt.Errorf("get announcement: %s", err.Error())
+	}
+
+	return announcement, nil
 }
 
 func (c *Core) SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {
