@@ -22,12 +22,16 @@ type ICore interface {
 	CreateUserAccount(login string, password string) error
 	FindUserAccount(login string, password string) (*models.UserItem, bool, error)
 	FindUserByLogin(login string) (bool, error)
+
+	GetAnnouncements(page uint64, pageSize uint64) ([]models.Announcement, error)
+	SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
 }
 
 type Core struct {
-	log      *logrus.Logger
-	profiles psx.IProfileRepo
-	sessions session.ISessionRepo
+	log           *logrus.Logger
+	profiles      psx.IRepository
+	announcements psx.IRepository
+	sessions      session.ISessionRepo
 }
 
 func GetCore(psxCfg *configs.DbPsxConfig, redisCfg *configs.DbRedisCfg, log *logrus.Logger) (*Core, error) {
@@ -44,9 +48,10 @@ func GetCore(psxCfg *configs.DbPsxConfig, redisCfg *configs.DbRedisCfg, log *log
 	}
 
 	core := &Core{
-		log:      log,
-		profiles: filmRepo,
-		sessions: authRepo,
+		log:           log,
+		profiles:      filmRepo,
+		sessions:      authRepo,
+		announcements: filmRepo,
 	}
 
 	return core, nil
@@ -153,4 +158,22 @@ func (c *Core) FindUserByLogin(login string) (bool, error) {
 	}
 
 	return found, nil
+}
+
+func (c *Core) GetAnnouncements(page uint64, pageSize uint64) ([]models.Announcement, error) {
+	announcements, err := c.announcements.GetAnnouncements(page, pageSize)
+	if err != nil {
+		return nil, fmt.Errorf("get announcements error: %s", err.Error())
+	}
+
+	return announcements, nil
+}
+
+func (c *Core) SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {
+	announcements, err := c.announcements.SearchAnnouncements(page, pageSize, minCost, maxCost, order)
+	if err != nil {
+		return nil, fmt.Errorf("search announcements error: %s", err.Error())
+	}
+
+	return announcements, nil
 }

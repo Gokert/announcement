@@ -3,12 +3,14 @@ package delivery
 import (
 	"encoding/json"
 	_ "filmoteka/docs"
+	"filmoteka/pkg/middleware"
 	"filmoteka/pkg/models"
 	httpResponse "filmoteka/pkg/response"
 	"filmoteka/usecase"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -29,6 +31,10 @@ func GetApi(core *usecase.Core, log *logrus.Logger) *Api {
 	api.mx.HandleFunc("/signup", api.Signup)
 	api.mx.HandleFunc("/logout", api.Logout)
 	api.mx.HandleFunc("/authcheck", api.AuthAccept)
+
+	api.mx.HandleFunc("/api/v1/announcements/:id", api.GetAnnouncements)
+	api.mx.HandleFunc("/api/v1/announcements/search", api.SearchAnnouncements)
+	api.mx.Handle("/api/v1/announcements/create", middleware.AuthCheck(http.HandlerFunc(api.CreateAnnouncement), core, log))
 
 	return api
 }
@@ -255,6 +261,95 @@ func (a *Api) AuthAccept(w http.ResponseWriter, r *http.Request) {
 
 	response.Body = models.AuthCheckResponse{
 		Login: login,
+	}
+
+	httpResponse.SendResponse(w, r, &response, a.log)
+}
+
+func (a *Api) CreateAnnouncement(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (a *Api) GetAnnouncements(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{Status: http.StatusOK, Body: nil}
+
+	if r.Method != http.MethodGet {
+		response.Status = http.StatusMethodNotAllowed
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	page, err := strconv.ParseUint(r.URL.Query().Get("page"), 10, 64)
+	if err != nil {
+		page = 0
+	}
+
+	pageSize, err := strconv.ParseUint(r.URL.Query().Get("per_page"), 10, 64)
+	if err != nil {
+		pageSize = 8
+	}
+
+	announcements, err := a.core.GetAnnouncements(page, pageSize)
+	if err != nil {
+		a.log.Error("get announcements error: ", err.Error())
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	response.Body = &models.Announcements{
+		Count:         uint64(len(announcements)),
+		Announcements: announcements,
+	}
+
+	httpResponse.SendResponse(w, r, &response, a.log)
+}
+
+func (a *Api) SearchAnnouncements(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{Status: http.StatusOK, Body: nil}
+
+	if r.Method != http.MethodGet {
+		response.Status = http.StatusMethodNotAllowed
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	page, err := strconv.ParseUint(r.URL.Query().Get("page"), 10, 64)
+	if err != nil {
+		page = 0
+	}
+
+	pageSize, err := strconv.ParseUint(r.URL.Query().Get("per_page"), 10, 64)
+	if err != nil {
+		pageSize = 8
+	}
+
+	minCost, err := strconv.ParseUint(r.URL.Query().Get("min_cost"), 10, 64)
+	if err != nil {
+		minCost = 0
+	}
+
+	maxCost, err := strconv.ParseUint(r.URL.Query().Get("max_cost"), 10, 64)
+	if err != nil {
+		maxCost = 0
+	}
+
+	order := r.URL.Query().Get("sort_by")
+	if order == "" {
+		order = "date"
+	}
+
+	announcements, err := a.core.SearchAnnouncements(page, pageSize, minCost, maxCost, order)
+	if err != nil {
+		a.log.Error("Search announcements error: ", err.Error())
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	response.Body = &models.Announcements{
+		Count:         uint64(len(announcements)),
+		Announcements: announcements,
 	}
 
 	httpResponse.SendResponse(w, r, &response, a.log)
