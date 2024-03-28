@@ -61,7 +61,6 @@ func GetCore(psxCfg *configs.DbPsxConfig, redisCfg *configs.DbRedisCfg, log *log
 
 func (c *Core) GetUserId(ctx context.Context, sid string) (uint64, error) {
 	login, err := c.sessions.GetUserLogin(ctx, sid)
-
 	if err != nil {
 		return 0, fmt.Errorf("get user login error: %s", err.Error())
 	}
@@ -76,7 +75,6 @@ func (c *Core) GetUserId(ctx context.Context, sid string) (uint64, error) {
 
 func (c *Core) GetUserName(ctx context.Context, sid string) (string, error) {
 	login, err := c.sessions.GetUserLogin(ctx, sid)
-
 	if err != nil {
 		return "", fmt.Errorf("get user name error: %s", err.Error())
 	}

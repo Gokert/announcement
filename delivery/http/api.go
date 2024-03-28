@@ -44,7 +44,7 @@ func GetApi(core *usecase.Core, log *logrus.Logger) *Api {
 func (a *Api) ListenAndServe(port string) error {
 	err := http.ListenAndServe(":"+port, a.mx)
 	if err != nil {
-		a.log.Errorf("Listen and server error: %s", err.Error())
+		a.log.Errorf("listen error: %s", err.Error())
 		return err
 	}
 

@@ -62,7 +62,7 @@ func (repo *SessionRepo) CheckActiveSession(ctx context.Context, sid string) (bo
 func (repo *SessionRepo) GetUserLogin(ctx context.Context, sid string) (string, error) {
 	value, err := repo.DB.Get(ctx, sid).Result()
 	if err != nil {
-		return "", fmt.Errorf("cannot find session: %s", sid)
+		return "", fmt.Errorf("cannot find session")
 	}
 
 	return value, nil
