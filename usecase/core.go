@@ -37,17 +37,17 @@ type Core struct {
 }
 
 func GetCore(psxCfg *configs.DbPsxConfig, redisCfg *configs.DbRedisCfg, log *logrus.Logger) (*Core, error) {
-	filmRepo, err := psx.GetFilmRepo(psxCfg, log)
+	filmRepo, err := psx.GetPsxRepo(psxCfg)
 	if err != nil {
-		log.Error("Get GetFilmRepo error: ", err)
-		return nil, err
+		return nil, fmt.Errorf("get psx error error: %s", err.Error())
 	}
+	log.Info("Psx created successful")
 
-	authRepo, err := session.GetAuthRepo(redisCfg, log)
+	authRepo, err := session.GetAuthRepo(redisCfg)
 	if err != nil {
-		log.Error("Get GetAuthRepo error: ", err)
-		return nil, err
+		return nil, fmt.Errorf("get auth repo error: %s", err.Error())
 	}
+	log.Info("Redis created successful")
 
 	core := &Core{
 		log:           log,
@@ -60,16 +60,14 @@ func GetCore(psxCfg *configs.DbPsxConfig, redisCfg *configs.DbRedisCfg, log *log
 }
 
 func (c *Core) GetUserId(ctx context.Context, sid string) (uint64, error) {
-	login, err := c.sessions.GetUserLogin(ctx, sid, c.log)
+	login, err := c.sessions.GetUserLogin(ctx, sid)
 
 	if err != nil {
-		c.log.Errorf("get user login error: %s", err.Error())
 		return 0, fmt.Errorf("get user login error: %s", err.Error())
 	}
 
 	id, err := c.profiles.GetUserId(login)
 	if err != nil {
-		c.log.Errorf("get user id error: %s", err.Error())
 		return 0, fmt.Errorf("get user id error: %s", err.Error())
 	}
 
@@ -77,10 +75,9 @@ func (c *Core) GetUserId(ctx context.Context, sid string) (uint64, error) {
 }
 
 func (c *Core) GetUserName(ctx context.Context, sid string) (string, error) {
-	login, err := c.sessions.GetUserLogin(ctx, sid, c.log)
+	login, err := c.sessions.GetUserLogin(ctx, sid)
 
 	if err != nil {
-		c.log.Errorf("get user name error: %s", err.Error())
 		return "", fmt.Errorf("get user name error: %s", err.Error())
 	}
 
@@ -96,7 +93,7 @@ func (c *Core) CreateSession(ctx context.Context, login string) (models.Session,
 		ExpiresAt: time.Now().Add(24 * time.Hour),
 	}
 
-	sessionAdded, err := c.sessions.AddSession(ctx, newSession, c.log)
+	sessionAdded, err := c.sessions.AddSession(ctx, newSession)
 
 	if !sessionAdded && err != nil {
 		return models.Session{}, err
@@ -110,10 +107,9 @@ func (c *Core) CreateSession(ctx context.Context, login string) (models.Session,
 }
 
 func (c *Core) FindActiveSession(ctx context.Context, sid string) (bool, error) {
-	login, err := c.sessions.CheckActiveSession(ctx, sid, c.log)
+	login, err := c.sessions.CheckActiveSession(ctx, sid)
 
 	if err != nil {
-		c.log.Errorf("find active session error: %s", err.Error())
 		return false, fmt.Errorf("find active session error: %s", err.Error())
 	}
 
@@ -121,11 +117,10 @@ func (c *Core) FindActiveSession(ctx context.Context, sid string) (bool, error) 
 }
 
 func (c *Core) KillSession(ctx context.Context, sid string) error {
-	_, err := c.sessions.DeleteSession(ctx, sid, c.log)
+	_, err := c.sessions.DeleteSession(ctx, sid)
 
 	if err != nil {
-		c.log.Errorf("delete session error: %s", err.Error())
-		return fmt.Errorf("delete sessionerror: %s", err.Error())
+		return fmt.Errorf("delete session error: %s", err.Error())
 	}
 
 	return nil
@@ -135,7 +130,6 @@ func (c *Core) CreateUserAccount(login string, password string) error {
 	hashPassword := utils.HashPassword(password)
 	err := c.profiles.CreateUser(login, hashPassword)
 	if err != nil {
-		c.log.Errorf("create user account error: %s", err.Error())
 		return fmt.Errorf("create user account error: %s", err.Error())
 	}
 
@@ -146,7 +140,6 @@ func (c *Core) FindUserAccount(login string, password string) (*models.UserItem,
 	hashPassword := utils.HashPassword(password)
 	user, found, err := c.profiles.GetUser(login, hashPassword)
 	if err != nil {
-		c.log.Errorf("find user error: %s", err.Error())
 		return nil, false, fmt.Errorf("find user account error: %s", err.Error())
 	}
 	return user, found, nil
@@ -155,7 +148,6 @@ func (c *Core) FindUserAccount(login string, password string) (*models.UserItem,
 func (c *Core) FindUserByLogin(login string) (bool, error) {
 	found, err := c.profiles.FindUser(login)
 	if err != nil {
-		c.log.Errorf("find user by login error: %s", err.Error())
 		return false, fmt.Errorf("find user by login error: %s", err.Error())
 	}
 

@@ -7,7 +7,6 @@ import (
 	"filmoteka/pkg/models"
 	"fmt"
 	_ "github.com/jackc/pgx/stdlib"
-	"github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -27,22 +26,19 @@ type Repository struct {
 	db *sql.DB
 }
 
-func GetFilmRepo(config *configs.DbPsxConfig, log *logrus.Logger) (*Repository, error) {
+func GetPsxRepo(config *configs.DbPsxConfig) (*Repository, error) {
 	dsn := fmt.Sprintf("user=%s dbname=%s password= %s host=%s port=%d sslmode=%s",
 		config.User, config.Dbname, config.Password, config.Host, config.Port, config.Sslmode)
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
-		log.Errorf("sql open error: %s", err.Error())
-		return nil, fmt.Errorf("get user repo err: %s", err.Error())
+		return nil, fmt.Errorf("sql open error: %s", err.Error())
 	}
 	err = db.Ping()
 	if err != nil {
-		log.Errorf("sql ping error: %s", err.Error())
-		return nil, fmt.Errorf("get user repo error: %s", err.Error())
+		return nil, fmt.Errorf("sql ping error: %s", err.Error())
 	}
 	db.SetMaxOpenConns(config.MaxOpenConns)
 
-	log.Info("Psx created successful")
 	return &Repository{db: db}, nil
 }
 
