@@ -2,7 +2,9 @@ package delivery
 
 import (
 	"encoding/json"
+	"errors"
 	_ "filmoteka/docs"
+	utils "filmoteka/pkg"
 	"filmoteka/pkg/middleware"
 	"filmoteka/pkg/models"
 	httpResponse "filmoteka/pkg/response"
@@ -10,6 +12,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"os"
+	"path"
 	"strconv"
 	"time"
 )
@@ -268,7 +272,99 @@ func (a *Api) AuthAccept(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Api) CreateAnnouncement(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{Status: http.StatusOK, Body: nil}
 
+	if r.Method != http.MethodPost {
+		response.Status = http.StatusMethodNotAllowed
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		a.log.Error("parse form-data error", err.Error())
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	header := r.FormValue("header")
+	info := r.FormValue("info")
+	cost, err := strconv.ParseUint(r.FormValue("cost"), 10, 64)
+	if err != nil {
+		a.log.Errorf("parse cost error: %s", err.Error())
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	photo, handler, err := r.FormFile("photo")
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		a.log.Errorf("parse photo error: %s", err.Error())
+		response.Status = http.StatusInternalServerError
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	if handler == nil {
+		a.log.Errorf("photo not found")
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	err = utils.ValidateImage(path.Ext(handler.Filename))
+	if err != nil {
+		a.log.Errorf("validate image error: %s", err.Error())
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	err = utils.ValidateSize(header, info, cost)
+	if err != nil {
+		a.log.Errorf("validate size error: %s", err.Error())
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	filename := "./images/" + handler.Filename
+	if err != nil && handler != nil && photo != nil {
+		a.log.Errorf("save photo error: %s", err.Error())
+		response.Status = http.StatusBadRequest
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	filePhoto, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		a.log.Errorf("open file error: %s", err.Error())
+		response.Status = http.StatusInternalServerError
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+	defer filePhoto.Close()
+
+	_, err = io.Copy(filePhoto, photo)
+	if err != nil {
+		a.log.Errorf("file copy error: %s", err.Error())
+		response.Status = http.StatusInternalServerError
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	userId, _ := r.Context().Value(middleware.UserIDKey).(uint64)
+
+	err = a.core.CreateAnnouncement(&models.Announcement{Header: header, Info: info, Cost: cost, Photo: filename}, userId)
+	if err != nil {
+		a.log.Errorf("create announcement error: %s", err.Error())
+		response.Status = http.StatusInternalServerError
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	httpResponse.SendResponse(w, r, &response, a.log)
 }
 
 func (a *Api) GetAnnouncements(w http.ResponseWriter, r *http.Request) {

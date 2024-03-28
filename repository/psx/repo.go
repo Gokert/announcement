@@ -20,6 +20,7 @@ type IRepository interface {
 	GetAnnouncements(page, pageSize uint64) ([]models.Announcement, error)
 	GetAnnouncement(id uint64) (*models.Announcement, error)
 	SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
+	CreateAnnouncement(announcement *models.Announcement, userId uint64) error
 }
 
 type Repository struct {
@@ -144,6 +145,15 @@ func (repo *Repository) GetAnnouncement(id uint64) (*models.Announcement, error)
 	}
 
 	return &announcement, nil
+}
+
+func (repo *Repository) CreateAnnouncement(announcement *models.Announcement, userId uint64) error {
+	_, err := repo.db.Exec("INSERT INTO announcement(id_profile, header, photo_href, info, cost) VALUES ($1, $2, $3, $4, $5)", userId, announcement.Header, announcement.Photo, announcement.Info, announcement.Cost)
+	if err != nil {
+		return fmt.Errorf("exec create announcement error: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (repo *Repository) SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {

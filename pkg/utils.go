@@ -3,7 +3,6 @@ package utils
 import (
 	"crypto/sha512"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	"unicode/utf8"
 )
@@ -11,14 +10,11 @@ import (
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 const (
-	FilmTitleBegin       = 1
-	FilmTitleEnd         = 150
-	FilmDescriptionBegin = 1
-	FilmDescriptionEnd   = 1000
-	FilmRatingBegin      = 0
-	FilmRatingEnd        = 10
-	ActorNameBegin       = 1
-	ActorNameEnd         = 150
+	maxLenHeader = 50
+	minLenHeader = 1
+	maxLenInfo   = 150
+	minLenInfo   = 1
+	minCost      = 0
 )
 
 func HashPassword(password string) []byte {
@@ -35,12 +31,39 @@ func RandStringRunes(seed int) string {
 	return string(symbols)
 }
 
-func ValidateStringSize(validatedString string, begin int, end int, validateError string, logger *logrus.Logger) error {
-	validateStringLength := utf8.RuneCountInString(validatedString)
-	if validateStringLength > end || validateStringLength < begin {
-		logger.Error(validateError)
-		return fmt.Errorf(validateError)
+func ValidateSize(header, info string, cost uint64) error {
+	headerLength := utf8.RuneCountInString(header)
+	if headerLength < minLenHeader || headerLength > maxLenHeader {
+		return fmt.Errorf("header size error")
 	}
+
+	infoLength := utf8.RuneCountInString(info)
+	if infoLength < minLenInfo || infoLength > maxLenInfo {
+		return fmt.Errorf("info size error")
+	}
+
+	if cost < minCost {
+		return fmt.Errorf("cost error")
+	}
+
+	return nil
+}
+
+func ValidateImage(filename string) error {
+	allowedExtensions := []string{".png", ".jpg", ".jpeg", ".webp"}
+
+	matchFound := false
+	for _, allowedExtension := range allowedExtensions {
+		if filename == allowedExtension {
+			matchFound = true
+			break
+		}
+	}
+
+	if !matchFound {
+		return fmt.Errorf("invalid file extension: %s", filename)
+	}
+
 	return nil
 }
 

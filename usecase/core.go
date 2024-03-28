@@ -25,6 +25,7 @@ type ICore interface {
 
 	GetAnnouncements(page uint64, pageSize uint64) ([]models.Announcement, error)
 	GetAnnouncement(id uint64) (*models.Announcement, error)
+	CreateAnnouncement(announcement *models.Announcement, userId uint64) error
 	SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
 }
 
@@ -177,6 +178,16 @@ func (c *Core) GetAnnouncement(id uint64) (*models.Announcement, error) {
 	}
 
 	return announcement, nil
+}
+
+func (c *Core) CreateAnnouncement(announcement *models.Announcement, userId uint64) error {
+
+	err := c.announcements.CreateAnnouncement(announcement, userId)
+	if err != nil {
+		return fmt.Errorf("create announcement error: %s", err.Error())
+	}
+
+	return err
 }
 
 func (c *Core) SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {
