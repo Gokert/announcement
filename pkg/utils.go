@@ -3,7 +3,12 @@ package utils
 import (
 	"crypto/sha512"
 	"fmt"
+	"io"
 	"math/rand"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"path"
 	"unicode/utf8"
 )
 
@@ -65,6 +70,36 @@ func ValidateImage(filename string) error {
 	}
 
 	return nil
+}
+
+func SaveImage(photo *multipart.File, handler *multipart.FileHeader, pathSave string) (string, int, error) {
+	if handler == nil {
+		return "", http.StatusBadRequest, fmt.Errorf("photo not found")
+	}
+
+	err := ValidateImage(path.Ext(handler.Filename))
+	if err != nil {
+		return "", http.StatusBadRequest, fmt.Errorf("validate image error: %s", err.Error())
+
+	}
+
+	filename := pathSave + handler.Filename
+	if err != nil && handler != nil && photo != nil {
+		return "", http.StatusInternalServerError, fmt.Errorf("save photo error: %s", err.Error())
+	}
+
+	filePhoto, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return "", http.StatusInternalServerError, fmt.Errorf("open file error: %s", err.Error())
+	}
+	defer filePhoto.Close()
+
+	_, err = io.Copy(filePhoto, *photo)
+	if err != nil {
+		return "", http.StatusInternalServerError, fmt.Errorf("file copy error: %s", err.Error())
+	}
+
+	return filename, 0, nil
 }
 
 const (

@@ -43,3 +43,14 @@ func AuthCheck(next http.Handler, core Core, lg *logrus.Logger) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func MethodCheck(next http.Handler, method string, lg *logrus.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != method {
+			response := models.Response{Status: http.StatusMethodNotAllowed, Body: nil}
+			httpResponse.SendResponse(w, r, &response, lg)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
