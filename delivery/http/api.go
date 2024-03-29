@@ -8,6 +8,7 @@ import (
 	"filmoteka/pkg/models"
 	httpResponse "filmoteka/pkg/response"
 	"filmoteka/usecase"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -265,6 +266,7 @@ func (a *Api) GetAnnouncements(w http.ResponseWriter, r *http.Request) {
 		pageSize = 8
 	}
 
+	fmt.Println(page, pageSize)
 	announcements, err := a.core.GetAnnouncements(page, pageSize)
 	if err != nil {
 		a.log.Errorf("get announcements error: %s", err.Error())

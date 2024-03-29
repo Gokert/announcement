@@ -164,7 +164,7 @@ func (repo *Repository) SearchAnnouncements(page, pageSize, minCost, maxCost uin
 		str.WriteString(fmt.Sprintf("WHERE announcement.cost > $1 ORDER BY announcement.%s DESC OFFSET $2 LIMIT $3 ", order))
 		params = append(params, minCost, page, pageSize)
 	default:
-		str.WriteString(fmt.Sprintf("WHERE announcement.cost > $1 AND announcement.cost < $2 ORDER BY announcement.%s OFFSET $3 LIMIT $4 ", order))
+		str.WriteString(fmt.Sprintf("WHERE announcement.cost > $1 AND announcement.cost < $2 ORDER BY announcement.%s DESC OFFSET $3 LIMIT $4 ", order))
 		params = append(params, minCost, maxCost, page, pageSize)
 	}
 
@@ -183,6 +183,8 @@ func (repo *Repository) SearchAnnouncements(page, pageSize, minCost, maxCost uin
 
 		announcements = append(announcements, announcement)
 	}
+
+	fmt.Println(announcements)
 
 	return announcements, nil
 }
