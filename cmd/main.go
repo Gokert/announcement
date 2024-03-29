@@ -6,6 +6,7 @@ import (
 	delivery "filmoteka/delivery/http"
 	"filmoteka/usecase"
 	_ "github.com/swaggo/swag"
+	"os"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 		return
 	}
 
-	psxCfg, err := configs.GetPsxConfig("configs/db_psx.yaml")
+	psxCfg, err := configs.GetPsxConfig()
 	if err != nil {
 		log.Errorf("Create psx config error: %s", err.Error())
 		return
@@ -35,9 +36,9 @@ func main() {
 	}
 
 	api := delivery.GetApi(core, log)
-
-	log.Info("Server running")
-	err = api.ListenAndServe("8081")
+	port := os.Getenv("APP_PORT")
+	log.Infof("Server running on %s", port)
+	err = api.ListenAndServe(port)
 	if err != nil {
 		log.Errorf("Listen and serve error: %s", err.Error())
 		return

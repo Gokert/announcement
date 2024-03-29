@@ -3,8 +3,6 @@ package configs
 import (
 	"github.com/spf13/viper"
 	"os"
-	"path/filepath"
-	"strings"
 )
 
 type DbPsxConfig struct {
@@ -27,10 +25,19 @@ type DbRedisCfg struct {
 
 func InitEnv() error {
 	envMap := map[string]string{
+		"APP_PORT":       "8081",
 		"REDIS_ADDR":     "127.0.0.1:6379",
 		"REDIS_PASSWORD": "",
 		"REDIS_DB":       "0",
 		"REDIS_TIMER":    "15",
+		"PSX_USER":       "admin",
+		"PSX_PASSWORD":   "admin",
+		"PSX_DBNAME":     "announcement",
+		"PSX_HOST":       "127.0.0.1",
+		"PSX_PORT":       "5432",
+		"PSX_SSLMODE":    "disable",
+		"PSX_MAXCONNS":   "10",
+		"PSX_TIMER":      "10",
 	}
 
 	for key, defValue := range envMap {
@@ -53,25 +60,19 @@ func setDefaultEnv(key, value string) error {
 	return nil
 }
 
-func GetPsxConfig(cfgPath string) (*DbPsxConfig, error) {
+func GetPsxConfig() (*DbPsxConfig, error) {
 	v := viper.GetViper()
-	v.SetConfigFile(cfgPath)
-	v.SetConfigType(strings.TrimPrefix(filepath.Ext(cfgPath), "."))
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		return nil, err
-	}
+	v.AutomaticEnv()
 
 	cfg := &DbPsxConfig{
-		User:         v.GetString("user"),
-		Password:     v.GetString("password"),
-		Dbname:       v.GetString("dbname"),
-		Host:         v.GetString("host"),
-		Port:         v.GetInt("port"),
-		Sslmode:      v.GetString("sslmode"),
-		MaxOpenConns: v.GetInt("max_open_conns"),
-		Timer:        v.GetInt("timer"),
+		User:         v.GetString("PSX_USER"),
+		Password:     v.GetString("PSX_PASSWORD"),
+		Dbname:       v.GetString("PSX_DBNAME"),
+		Host:         v.GetString("PSX_HOST"),
+		Port:         v.GetInt("PSX_PORT"),
+		Sslmode:      v.GetString("PSX_SSLMODE"),
+		MaxOpenConns: v.GetInt("PSX_MAXCONNS"),
+		Timer:        v.GetInt("PSX_TIMER"),
 	}
 
 	return cfg, nil
