@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+//go:generate mockgen -source=repo.go -destination=../../mocks/repo_mock.go -package=mocks
 type IRepository interface {
 	GetUser(login string, password []byte) (*models.UserItem, bool, error)
 	FindUser(login string) (bool, error)
@@ -47,14 +48,6 @@ func (repo *Repository) GetUser(login string, password []byte) (*models.UserItem
 
 	err := repo.db.QueryRow("SELECT profile.id, profile.login FROM profile "+
 		"WHERE profile.login = $1 AND profile.password = $2 ", login, password).Scan(&post.Id, &post.Login)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, false, nil
-		}
-		return nil, false, fmt.Errorf("get query user error: %s", err.Error())
-	}
-
-	err = repo.db.QueryRow("SELECT profile.id, profile.login, profile.password FROM profile ").Scan(&post.Id, &post.Login, &post.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, false, nil
@@ -100,7 +93,7 @@ func (repo *Repository) GetUserId(login string) (uint64, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, fmt.Errorf("user not found for login: %s", login)
 		}
-		return 0, fmt.Errorf("get userpro file id error: %s", err.Error())
+		return 0, fmt.Errorf("select user profile id error: %s", err.Error())
 	}
 
 	return userID, nil

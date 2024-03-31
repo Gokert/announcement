@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+//go:generate mockgen -source=core.go -destination=../mocks/core_mock.go -package=mocks
 type ICore interface {
 	GetUserName(ctx context.Context, sid string) (string, error)
 	CreateSession(ctx context.Context, login string) (models.Session, error)

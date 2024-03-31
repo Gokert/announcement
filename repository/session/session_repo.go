@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"errors"
 	"filmoteka/configs"
 	"filmoteka/pkg/models"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"time"
 )
 
+//go:generate mockgen -source=session_repo.go -destination=../../mocks/session_mock.go -package=mocks
 type ISessionRepo interface {
 	AddSession(ctx context.Context, active models.Session) (bool, error)
 	CheckActiveSession(ctx context.Context, sid string) (bool, error)
@@ -61,6 +63,10 @@ func (repo *SessionRepo) CheckActiveSession(ctx context.Context, sid string) (bo
 
 func (repo *SessionRepo) GetUserLogin(ctx context.Context, sid string) (string, error) {
 	value, err := repo.DB.Get(ctx, sid).Result()
+	if errors.Is(err, redis.Nil) {
+		return "", fmt.Errorf("key not found")
+	}
+
 	if err != nil {
 		return "", fmt.Errorf("cannot find session")
 	}
