@@ -1,0 +1,10 @@
+FROM golang:1.21-alpine AS builder
+WORKDIR /build
+COPY . .
+
+RUN go build -o marketApp ./cmd/market/main.go
+
+CMD ./marketApp
+
+
+

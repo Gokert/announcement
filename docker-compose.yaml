@@ -3,32 +3,64 @@ services:
   redis:
     image: "redis:latest"
     ports:
-      - "6378:6379"
+      - "${REDIS_DOCKER_PORT}:6379"
     networks:
       - net
 
-  postgres:
+  authpsx:
     image: "postgres:latest"
     environment:
-      POSTGRES_PASSWORD: admin
-      POSTGRES_USER: admin
-      POSTGRES_DB: announcement
+      POSTGRES_PASSWORD: ${AUTH_PSX_PASSWORD}
+      POSTGRES_USER: ${AUTH_PSX_USER}
+      POSTGRES_DB: ${AUTH_PSX_DBNAME}
     volumes:
-      - ./scripts/sql:/docker-entrypoint-initdb.d
+      - ./scripts/sql/auth:/docker-entrypoint-initdb.d
     ports:
-      - "5431:5432"
+      - "${AUTH_PSX_DOCKER_PORT}:5432"
     networks:
       - net
 
-  app:
+  marketpsx:
+    image: "postgres:latest"
+    environment:
+      POSTGRES_PASSWORD: ${MARKET_PSX_PASSWORD}
+      POSTGRES_USER: ${MARKET_PSX_USER}
+      POSTGRES_DB: ${MARKET_PSX_DBNAME}
+    volumes:
+      - ./scripts/sql/market:/docker-entrypoint-initdb.d
+    ports:
+      - "${MARKET_PSX_DOCKER_PORT}:5432"
+    networks:
+      - net
+
+  authapp:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile_auth
     ports:
-      - "8081:8081"
+      - "${AUTH_APP_PORT}:${AUTH_APP_PORT}"
+      - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     depends_on:
       - redis
-      - postgres
+      - authpsx
+      - marketpsx
+    env_file:
+      .env
+    networks:
+      - net
+
+  marketapp:
+    build:
+      context: .
+      dockerfile: Dockerfile_market
+    ports:
+      - "${MARKET_APP_PORT}:${MARKET_APP_PORT}"
+    depends_on:
+      - redis
+      - authpsx
+      - marketpsx
+    env_file:
+      .env
     networks:
       - net
 

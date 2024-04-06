@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package auth;
+option go_package = "/authorization/proto";
+
+message FindIdRequest {
+  string sid = 1;
+}
+
+message FindIdResponse {
+  uint64 value = 1;
+}
+
+message AuthorizationCheckRequest {
+  string sid = 1;
+}
+
+message AuthorizationCheckResponse {
+  bool status = 1;
+}
+
+service Authorization {
+  rpc GetId(FindIdRequest) returns (FindIdResponse) {}
+  rpc GetAuthorizationStatus(AuthorizationCheckRequest) returns (AuthorizationCheckResponse) {}
+}

@@ -1,8 +1,8 @@
 package httpResponse
 
 import (
+	"anncouncement/pkg/models"
 	"encoding/json"
-	"filmoteka/pkg/models"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
