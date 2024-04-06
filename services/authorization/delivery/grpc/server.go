@@ -25,7 +25,7 @@ type server struct {
 }
 
 func NewServer(l *logrus.Logger) (*authGrpc, error) {
-	config, err := configs.GetPsxConfig()
+	config, err := configs.GetAuthPsxConfig()
 	if err != nil {
 		return nil, fmt.Errorf("get auth psx config error: %s", err.Error())
 	}

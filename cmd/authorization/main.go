@@ -24,7 +24,7 @@ func main() {
 		return
 	}
 
-	psxCfg, err := configs.GetPsxConfig()
+	psxCfg, err := configs.GetAuthPsxConfig()
 	if err != nil {
 		log.Errorf("Create psx config error: %s", err.Error())
 		return

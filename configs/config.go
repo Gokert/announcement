@@ -33,9 +33,10 @@ type GrpcConfig struct {
 
 func InitEnv() error {
 	envMap := map[string]string{
-		"REDIS_ADDR":     "127.0.0.1:6379",
-		"PSX_HOST":       "127.0.0.1",
-		"AUTH_GRPC_ADDR": "127.0.0.1",
+		"REDIS_ADDR":      "127.0.0.1:6379",
+		"AUTH_PSX_HOST":   "127.0.0.1",
+		"MARKET_PSX_HOST": "127.0.0.1",
+		"AUTH_GRPC_ADDR":  "127.0.0.1",
 	}
 
 	for key, defValue := range envMap {
@@ -63,19 +64,37 @@ func setDefaultEnv(key, value string) error {
 	return nil
 }
 
-func GetPsxConfig() (*DbPsxConfig, error) {
+func GetAuthPsxConfig() (*DbPsxConfig, error) {
 	v := viper.GetViper()
 	v.AutomaticEnv()
 
 	cfg := &DbPsxConfig{
-		User:         v.GetString("PSX_USER"),
-		Password:     v.GetString("PSX_PASSWORD"),
-		Dbname:       v.GetString("PSX_DBNAME"),
-		Host:         v.GetString("PSX_HOST"),
-		Port:         v.GetInt("PSX_PORT"),
-		Sslmode:      v.GetString("PSX_SSLMODE"),
-		MaxOpenConns: v.GetInt("PSX_MAXCONNS"),
-		Timer:        v.GetInt("PSX_TIMER"),
+		User:         v.GetString("AUTH_PSX_USER"),
+		Password:     v.GetString("AUTH_PSX_PASSWORD"),
+		Dbname:       v.GetString("AUTH_PSX_DBNAME"),
+		Host:         v.GetString("AUTH_PSX_HOST"),
+		Port:         v.GetInt("AUTH_PSX_PORT"),
+		Sslmode:      v.GetString("AUTH_PSX_SSLMODE"),
+		MaxOpenConns: v.GetInt("AUTH_PSX_MAXCONNS"),
+		Timer:        v.GetInt("AUTH_PSX_TIMER"),
+	}
+
+	return cfg, nil
+}
+
+func GetMarketPsxConfig() (*DbPsxConfig, error) {
+	v := viper.GetViper()
+	v.AutomaticEnv()
+
+	cfg := &DbPsxConfig{
+		User:         v.GetString("MARKET_PSX_USER"),
+		Password:     v.GetString("MARKET_PSX_PASSWORD"),
+		Dbname:       v.GetString("MARKET_PSX_DBNAME"),
+		Host:         v.GetString("MARKET_PSX_HOST"),
+		Port:         v.GetInt("MARKET_PSX_PORT"),
+		Sslmode:      v.GetString("MARKET_PSX_SSLMODE"),
+		MaxOpenConns: v.GetInt("MARKET_PSX_MAXCONNS"),
+		Timer:        v.GetInt("MARKET_PSX_TIMER"),
 	}
 
 	return cfg, nil
