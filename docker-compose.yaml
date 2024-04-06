@@ -3,20 +3,20 @@ services:
   redis:
     image: "redis:latest"
     ports:
-      - "6378:6379"
+      - "${REDIS_DOCKER_PORT}:6379"
     networks:
       - net
 
   postgres:
     image: "postgres:latest"
     environment:
-      POSTGRES_PASSWORD: admin
-      POSTGRES_USER: admin
-      POSTGRES_DB: announcement
+      POSTGRES_PASSWORD: ${PSX_PASSWORD}
+      POSTGRES_USER: ${PSX_USER}
+      POSTGRES_DB: ${PSX_DBNAME}
     volumes:
       - ./scripts/sql:/docker-entrypoint-initdb.d
     ports:
-      - "5431:5432"
+      - "${PSX_DOCKER_PORT}:5432"
     networks:
       - net
 
