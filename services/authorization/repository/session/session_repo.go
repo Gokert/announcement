@@ -1,10 +1,10 @@
 package session
 
 import (
+	"anncouncement/configs"
+	"anncouncement/pkg/models"
 	"context"
 	"errors"
-	"filmoteka/configs"
-	"filmoteka/pkg/models"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"time"
@@ -68,7 +68,7 @@ func (repo *SessionRepo) GetUserLogin(ctx context.Context, sid string) (string, 
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("cannot find session")
+		return "", fmt.Errorf("cannot find sessions")
 	}
 
 	return value, nil

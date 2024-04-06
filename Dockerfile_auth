@@ -1,0 +1,7 @@
+FROM golang:1.21-alpine AS builder
+WORKDIR /build
+COPY . .
+
+RUN go build -o authApp ./cmd/authorization/main.go
+
+CMD ./authApp

@@ -5,8 +5,8 @@
 package mocks
 
 import (
+	models "anncouncement/pkg/models"
 	context "context"
-	models "filmoteka/pkg/models"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"

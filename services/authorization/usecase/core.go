@@ -1,14 +1,15 @@
 package usecase
 
 import (
+	"anncouncement/configs"
+	utils "anncouncement/pkg"
+	"anncouncement/pkg/models"
+	"anncouncement/services/authorization/repository/profile"
+	"anncouncement/services/authorization/repository/session"
 	"context"
-	"filmoteka/configs"
-	utils "filmoteka/pkg"
-	"filmoteka/pkg/models"
-	"filmoteka/repository/psx"
-	"filmoteka/repository/session"
 	"fmt"
 	"github.com/sirupsen/logrus"
+
 	"time"
 )
 
@@ -23,24 +24,18 @@ type ICore interface {
 	CreateUserAccount(login string, password string) error
 	FindUserAccount(login string, password string) (*models.UserItem, bool, error)
 	FindUserByLogin(login string) (bool, error)
-
-	GetAnnouncements(page uint64, pageSize uint64) ([]models.Announcement, error)
-	GetAnnouncement(id uint64) (*models.Announcement, error)
-	CreateAnnouncement(announcement *models.Announcement, userId uint64) error
-	SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
 }
 
 type Core struct {
-	log           *logrus.Logger
-	profiles      psx.IRepository
-	announcements psx.IRepository
-	sessions      session.ISessionRepo
+	log      *logrus.Logger
+	profiles profile.IRepository
+	sessions session.ISessionRepo
 }
 
 func GetCore(psxCfg *configs.DbPsxConfig, redisCfg *configs.DbRedisCfg, log *logrus.Logger) (*Core, error) {
-	filmRepo, err := psx.GetPsxRepo(psxCfg)
+	filmRepo, err := profile.GetPsxRepo(psxCfg)
 	if err != nil {
-		return nil, fmt.Errorf("get psx error error: %s", err.Error())
+		return nil, fmt.Errorf("get psx error: %s", err.Error())
 	}
 	log.Info("Psx created successful")
 
@@ -51,10 +46,9 @@ func GetCore(psxCfg *configs.DbPsxConfig, redisCfg *configs.DbRedisCfg, log *log
 	log.Info("Redis created successful")
 
 	core := &Core{
-		log:           log,
-		profiles:      filmRepo,
-		sessions:      authRepo,
-		announcements: filmRepo,
+		log:      log,
+		profiles: filmRepo,
+		sessions: authRepo,
 	}
 
 	return core, nil
@@ -109,7 +103,7 @@ func (c *Core) FindActiveSession(ctx context.Context, sid string) (bool, error) 
 	login, err := c.sessions.CheckActiveSession(ctx, sid)
 
 	if err != nil {
-		return false, fmt.Errorf("find active session error: %s", err.Error())
+		return false, fmt.Errorf("find active sessions error: %s", err.Error())
 	}
 
 	return login, nil
@@ -119,7 +113,7 @@ func (c *Core) KillSession(ctx context.Context, sid string) error {
 	_, err := c.sessions.DeleteSession(ctx, sid)
 
 	if err != nil {
-		return fmt.Errorf("delete session error: %s", err.Error())
+		return fmt.Errorf("delete sessions error: %s", err.Error())
 	}
 
 	return nil
@@ -151,41 +145,4 @@ func (c *Core) FindUserByLogin(login string) (bool, error) {
 	}
 
 	return found, nil
-}
-
-func (c *Core) GetAnnouncements(page uint64, pageSize uint64) ([]models.Announcement, error) {
-	announcements, err := c.announcements.GetAnnouncements(page, pageSize)
-	if err != nil {
-		return nil, fmt.Errorf("get announcements error: %s", err.Error())
-	}
-
-	return announcements, nil
-}
-
-func (c *Core) GetAnnouncement(id uint64) (*models.Announcement, error) {
-	announcement, err := c.announcements.GetAnnouncement(id)
-	if err != nil {
-		return nil, fmt.Errorf("get announcement: %s", err.Error())
-	}
-
-	return announcement, nil
-}
-
-func (c *Core) CreateAnnouncement(announcement *models.Announcement, userId uint64) error {
-
-	err := c.announcements.CreateAnnouncement(announcement, userId)
-	if err != nil {
-		return fmt.Errorf("create announcement error: %s", err.Error())
-	}
-
-	return err
-}
-
-func (c *Core) SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {
-	announcements, err := c.announcements.SearchAnnouncements(page, pageSize, minCost, maxCost, order)
-	if err != nil {
-		return nil, fmt.Errorf("search announcements error: %s", err.Error())
-	}
-
-	return announcements, nil
 }

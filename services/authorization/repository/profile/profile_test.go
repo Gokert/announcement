@@ -1,9 +1,9 @@
-package psx
+package profile
 
 import (
+	utils "anncouncement/pkg"
+	"anncouncement/pkg/models"
 	"database/sql"
-	utils "filmoteka/pkg"
-	"filmoteka/pkg/models"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"reflect"

@@ -1,10 +1,10 @@
 package middleware
 
 import (
+	"anncouncement/pkg/models"
+	httpResponse "anncouncement/pkg/response"
 	"context"
 	"errors"
-	"filmoteka/pkg/models"
-	httpResponse "filmoteka/pkg/response"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )

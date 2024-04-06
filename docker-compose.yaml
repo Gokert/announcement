@@ -20,15 +20,32 @@ services:
     networks:
       - net
 
-  app:
+  authapp:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile_auth
     ports:
-      - "8081:8081"
+      - "${AUTH_APP_PORT}:${AUTH_APP_PORT}"
+      - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     depends_on:
       - redis
       - postgres
+    env_file:
+      .env
+    networks:
+      - net
+
+  marketapp:
+    build:
+      context: .
+      dockerfile: Dockerfile_market
+    ports:
+      - "${MARKET_APP_PORT}:${MARKET_APP_PORT}"
+    depends_on:
+      - redis
+      - postgres
+    env_file:
+      .env
     networks:
       - net
 

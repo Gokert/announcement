@@ -1,8 +1,8 @@
 package session
 
 import (
+	"anncouncement/pkg/models"
 	"context"
-	"filmoteka/pkg/models"
 	"github.com/go-redis/redis/v8"
 	"testing"
 	"time"
