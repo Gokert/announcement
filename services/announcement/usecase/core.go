@@ -14,10 +14,10 @@ import (
 
 //go:generate mockgen -source=core.go -destination=../mocks/core_mock.go -package=mocks
 type ICore interface {
-	GetAnnouncements(page uint64, pageSize uint64) ([]models.Announcement, error)
-	GetAnnouncement(id uint64) (*models.Announcement, error)
-	CreateAnnouncement(announcement *models.Announcement, userId uint64) error
-	SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
+	GetAnnouncements(ctx context.Context, page uint64, pageSize uint64) ([]models.Announcement, error)
+	GetAnnouncement(ctx context.Context, id uint64) (*models.Announcement, error)
+	CreateAnnouncement(ctx context.Context, announcement *models.Announcement, userId uint64) error
+	SearchAnnouncements(ctx context.Context, page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
 
 	GetUserId(ctx context.Context, sid string) (uint64, error)
 }
@@ -59,8 +59,8 @@ func GetCore(grpcCfg *configs.GrpcConfig, psxCfg *configs.DbPsxConfig, log *logr
 	return core, nil
 }
 
-func (c *Core) GetAnnouncements(page uint64, pageSize uint64) ([]models.Announcement, error) {
-	announcements, err := c.announcements.GetAnnouncements(page, pageSize)
+func (c *Core) GetAnnouncements(ctx context.Context, page uint64, pageSize uint64) ([]models.Announcement, error) {
+	announcements, err := c.announcements.GetAnnouncements(ctx, page, pageSize)
 	if err != nil {
 		return nil, fmt.Errorf("get announcements error: %s", err.Error())
 	}
@@ -68,8 +68,8 @@ func (c *Core) GetAnnouncements(page uint64, pageSize uint64) ([]models.Announce
 	return announcements, nil
 }
 
-func (c *Core) GetAnnouncement(id uint64) (*models.Announcement, error) {
-	announcement, err := c.announcements.GetAnnouncement(id)
+func (c *Core) GetAnnouncement(ctx context.Context, id uint64) (*models.Announcement, error) {
+	announcement, err := c.announcements.GetAnnouncement(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get announcement: %s", err.Error())
 	}
@@ -77,9 +77,8 @@ func (c *Core) GetAnnouncement(id uint64) (*models.Announcement, error) {
 	return announcement, nil
 }
 
-func (c *Core) CreateAnnouncement(announcement *models.Announcement, userId uint64) error {
-
-	err := c.announcements.CreateAnnouncement(announcement, userId)
+func (c *Core) CreateAnnouncement(ctx context.Context, announcement *models.Announcement, userId uint64) error {
+	err := c.announcements.CreateAnnouncement(ctx, announcement, userId)
 	if err != nil {
 		return fmt.Errorf("create announcement error: %s", err.Error())
 	}
@@ -87,8 +86,8 @@ func (c *Core) CreateAnnouncement(announcement *models.Announcement, userId uint
 	return err
 }
 
-func (c *Core) SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {
-	announcements, err := c.announcements.SearchAnnouncements(page, pageSize, minCost, maxCost, order)
+func (c *Core) SearchAnnouncements(ctx context.Context, page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {
+	announcements, err := c.announcements.SearchAnnouncements(ctx, page, pageSize, minCost, maxCost, order)
 	if err != nil {
 		return nil, fmt.Errorf("search announcements error: %s", err.Error())
 	}

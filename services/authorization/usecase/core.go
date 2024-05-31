@@ -21,9 +21,9 @@ type ICore interface {
 	KillSession(ctx context.Context, sid string) error
 	GetUserId(ctx context.Context, sid string) (uint64, error)
 
-	CreateUserAccount(login string, password string) error
-	FindUserAccount(login string, password string) (*models.UserItem, bool, error)
-	FindUserByLogin(login string) (bool, error)
+	CreateUserAccount(ctx context.Context, login string, password string) error
+	FindUserAccount(ctx context.Context, login string, password string) (*models.UserItem, bool, error)
+	FindUserByLogin(ctx context.Context, login string) (bool, error)
 }
 
 type Core struct {
@@ -60,7 +60,7 @@ func (c *Core) GetUserId(ctx context.Context, sid string) (uint64, error) {
 		return 0, fmt.Errorf("get user login error: %s", err.Error())
 	}
 
-	id, err := c.profiles.GetUserId(login)
+	id, err := c.profiles.GetUserId(ctx, login)
 	if err != nil {
 		return 0, fmt.Errorf("get user id error: %s", err.Error())
 	}
@@ -119,9 +119,9 @@ func (c *Core) KillSession(ctx context.Context, sid string) error {
 	return nil
 }
 
-func (c *Core) CreateUserAccount(login string, password string) error {
+func (c *Core) CreateUserAccount(ctx context.Context, login string, password string) error {
 	hashPassword := utils.HashPassword(password)
-	err := c.profiles.CreateUser(login, hashPassword)
+	err := c.profiles.CreateUser(ctx, login, hashPassword)
 	if err != nil {
 		return fmt.Errorf("create user account error: %s", err.Error())
 	}
@@ -129,17 +129,17 @@ func (c *Core) CreateUserAccount(login string, password string) error {
 	return nil
 }
 
-func (c *Core) FindUserAccount(login string, password string) (*models.UserItem, bool, error) {
+func (c *Core) FindUserAccount(ctx context.Context, login string, password string) (*models.UserItem, bool, error) {
 	hashPassword := utils.HashPassword(password)
-	user, found, err := c.profiles.GetUser(login, hashPassword)
+	user, found, err := c.profiles.GetUser(ctx, login, hashPassword)
 	if err != nil {
 		return nil, false, fmt.Errorf("find user account error: %s", err.Error())
 	}
 	return user, found, nil
 }
 
-func (c *Core) FindUserByLogin(login string) (bool, error) {
-	found, err := c.profiles.FindUser(login)
+func (c *Core) FindUserByLogin(ctx context.Context, login string) (bool, error) {
+	found, err := c.profiles.FindUser(ctx, login)
 	if err != nil {
 		return false, fmt.Errorf("find user by login error: %s", err.Error())
 	}

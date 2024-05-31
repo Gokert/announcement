@@ -3,6 +3,7 @@ package profile
 import (
 	utils "anncouncement/pkg"
 	"anncouncement/pkg/models"
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestGetUser(t *testing.T) {
+	ctx := context.Background()
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("cant create mock: %s", err)
@@ -40,7 +42,7 @@ func TestGetUser(t *testing.T) {
 			WithArgs(item.Login, hashPsw).
 			WillReturnRows(rows)
 
-		user, found, err := repo.GetUser(item.Login, hashPsw)
+		user, found, err := repo.GetUser(ctx, item.Login, hashPsw)
 		if err != nil {
 			t.Errorf("unexpected error: %s", err.Error())
 		}
@@ -61,7 +63,7 @@ func TestGetUser(t *testing.T) {
 		WithArgs("unknown_user", hashPsw).
 		WillReturnError(sql.ErrNoRows)
 
-	_, found, err := repo.GetUser("unknown_user", hashPsw)
+	_, found, err := repo.GetUser(ctx, "unknown_user", hashPsw)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err.Error())
 	}
@@ -75,13 +77,14 @@ func TestGetUser(t *testing.T) {
 		WithArgs("error_user", hashPsw).
 		WillReturnError(fmt.Errorf("db_error"))
 
-	_, found, err = repo.GetUser("error_user", hashPsw)
+	_, found, err = repo.GetUser(ctx, "error_user", hashPsw)
 	if err == nil {
 		t.Errorf("expected error, got nil")
 	}
 }
 
 func TestFindUser(t *testing.T) {
+	ctx := context.Background()
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("cant create mock: %s", err)
@@ -108,7 +111,7 @@ func TestFindUser(t *testing.T) {
 		WithArgs(expect[0].Login).
 		WillReturnRows(rows)
 
-	foundAccount, err := repo.FindUser(expect[0].Login)
+	foundAccount, err := repo.FindUser(ctx, expect[0].Login)
 	if err != nil {
 		t.Errorf("GetUser error: %s", err)
 	}
@@ -126,7 +129,7 @@ func TestFindUser(t *testing.T) {
 		WithArgs(expect[0].Login).
 		WillReturnError(fmt.Errorf("db_error"))
 
-	found, err := repo.FindUser(expect[0].Login)
+	found, err := repo.FindUser(ctx, expect[0].Login)
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 		return
@@ -146,7 +149,7 @@ func TestFindUser(t *testing.T) {
 		WithArgs(expect[0].Login).
 		WillReturnError(sql.ErrNoRows)
 
-	found, err = repo.FindUser(expect[0].Login)
+	found, err = repo.FindUser(ctx, expect[0].Login)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err.Error())
 	}
@@ -158,6 +161,7 @@ func TestFindUser(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
+	ctx := context.Background()
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("cant create mock: %s", err)
@@ -188,7 +192,7 @@ func TestCreateUser(t *testing.T) {
 		WithArgs(expect[0].Login, hashPsw).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 
-	err = repo.CreateUser(expect[0].Login, hashPsw)
+	err = repo.CreateUser(ctx, expect[0].Login, hashPsw)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 		return
@@ -204,7 +208,7 @@ func TestCreateUser(t *testing.T) {
 		WithArgs(expect[0].Login).
 		WillReturnError(sql.ErrNoRows)
 
-	err = repo.CreateUser(expect[0].Login, hashPsw)
+	err = repo.CreateUser(ctx, expect[0].Login, hashPsw)
 	if err == nil {
 		t.Errorf("unexpected error: %s", err.Error())
 	}
@@ -212,6 +216,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUserId(t *testing.T) {
+	ctx := context.Background()
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("cant create mock: %s", err)
@@ -239,7 +244,7 @@ func TestGetUserId(t *testing.T) {
 		WithArgs(expect[0].Login).
 		WillReturnRows(rows)
 
-	id, err := repo.GetUserId(expect[0].Login)
+	id, err := repo.GetUserId(ctx, expect[0].Login)
 	if err != nil {
 		t.Errorf("get user id error: %s", err.Error())
 		return
@@ -258,7 +263,7 @@ func TestGetUserId(t *testing.T) {
 		WithArgs(expect[0].Login).
 		WillReturnError(sql.ErrNoRows)
 
-	id, err = repo.GetUserId(expect[0].Login)
+	id, err = repo.GetUserId(ctx, expect[0].Login)
 	if err == nil {
 		t.Errorf("unexpected error: %s", err.Error())
 	}
@@ -268,7 +273,7 @@ func TestGetUserId(t *testing.T) {
 		WithArgs(expect[0].Login).
 		WillReturnError(fmt.Errorf("db_error"))
 
-	id, err = repo.GetUserId(expect[0].Login)
+	id, err = repo.GetUserId(ctx, expect[0].Login)
 	if err == nil {
 		t.Errorf("expected error, got nil")
 	}

@@ -43,7 +43,6 @@ services:
     depends_on:
       - redis
       - authpsx
-      - marketpsx
     env_file:
       .env
     networks:
@@ -57,10 +56,21 @@ services:
       - "${MARKET_APP_PORT}:${MARKET_APP_PORT}"
     depends_on:
       - redis
-      - authpsx
       - marketpsx
     env_file:
       .env
+    networks:
+      - net
+
+  nginx:
+    image: "nginx:latest"
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - authapp
+      - marketapp
     networks:
       - net
 

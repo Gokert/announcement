@@ -75,7 +75,7 @@ func (s *server) GetId(ctx context.Context, req *proto.FindIdRequest) (*proto.Fi
 		return nil, fmt.Errorf("get user login error: %s", err.Error())
 	}
 
-	id, err := s.users.GetUserId(login)
+	id, err := s.users.GetUserId(ctx, login)
 	if err != nil {
 		return nil, fmt.Errorf("get user id error: %s", err.Error())
 	}

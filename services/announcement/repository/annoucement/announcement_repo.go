@@ -3,6 +3,7 @@ package annoucement_repo
 import (
 	"anncouncement/configs"
 	"anncouncement/pkg/models"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -12,10 +13,10 @@ import (
 
 //go:generate mockgen -source=announcement_repo.go -destination=../../mocks/repo_mock.go -package=mocks
 type IRepository interface {
-	GetAnnouncements(page, pageSize uint64) ([]models.Announcement, error)
-	GetAnnouncement(id uint64) (*models.Announcement, error)
-	SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
-	CreateAnnouncement(announcement *models.Announcement, userId uint64) error
+	GetAnnouncements(ctx context.Context, page, pageSize uint64) ([]models.Announcement, error)
+	GetAnnouncement(ctx context.Context, id uint64) (*models.Announcement, error)
+	SearchAnnouncements(ctx context.Context, page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error)
+	CreateAnnouncement(ctx context.Context, announcement *models.Announcement, userId uint64) error
 }
 
 type Repository struct {
@@ -38,10 +39,10 @@ func GetPsxRepo(config *configs.DbPsxConfig) (*Repository, error) {
 	return &Repository{db: db}, nil
 }
 
-func (repo *Repository) GetAnnouncements(page uint64, pageSize uint64) ([]models.Announcement, error) {
+func (repo *Repository) GetAnnouncements(ctx context.Context, page uint64, pageSize uint64) ([]models.Announcement, error) {
 	var announcements []models.Announcement
 
-	rows, err := repo.db.Query("SELECT announcement.header, announcement.photo_href, announcement.info, announcement.cost FROM announcement OFFSET $1 LIMIT $2", page, pageSize)
+	rows, err := repo.db.QueryContext(ctx, "SELECT announcement.header, announcement.photo_href, announcement.info, announcement.cost FROM announcement OFFSET $1 LIMIT $2", page, pageSize)
 	if err != nil {
 		return nil, fmt.Errorf("get announcements in repo error: %s", err.Error())
 	}
@@ -61,10 +62,10 @@ func (repo *Repository) GetAnnouncements(page uint64, pageSize uint64) ([]models
 	return announcements, nil
 }
 
-func (repo *Repository) GetAnnouncement(id uint64) (*models.Announcement, error) {
+func (repo *Repository) GetAnnouncement(ctx context.Context, id uint64) (*models.Announcement, error) {
 	var announcement models.Announcement
 
-	err := repo.db.QueryRow("SELECT announcement.header, announcement.photo_href, announcement.info, announcement.cost FROM announcement WHERE announcement.id = $1", id).Scan(&announcement.Header, &announcement.Info, &announcement.Photo, &announcement.Cost)
+	err := repo.db.QueryRowContext(ctx, "SELECT announcement.header, announcement.photo_href, announcement.info, announcement.cost FROM announcement WHERE announcement.id = $1", id).Scan(&announcement.Header, &announcement.Info, &announcement.Photo, &announcement.Cost)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -75,8 +76,8 @@ func (repo *Repository) GetAnnouncement(id uint64) (*models.Announcement, error)
 	return &announcement, nil
 }
 
-func (repo *Repository) CreateAnnouncement(announcement *models.Announcement, userId uint64) error {
-	_, err := repo.db.Exec("INSERT INTO announcement(id_profile, header, photo_href, info, cost) VALUES ($1, $2, $3, $4, $5)", userId, announcement.Header, announcement.Photo, announcement.Info, announcement.Cost)
+func (repo *Repository) CreateAnnouncement(ctx context.Context, announcement *models.Announcement, userId uint64) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO announcement(id_profile, header, photo_href, info, cost) VALUES ($1, $2, $3, $4, $5)", userId, announcement.Header, announcement.Photo, announcement.Info, announcement.Cost)
 	if err != nil {
 		return fmt.Errorf("exec create announcement error: %s", err.Error())
 	}
@@ -84,7 +85,7 @@ func (repo *Repository) CreateAnnouncement(announcement *models.Announcement, us
 	return nil
 }
 
-func (repo *Repository) SearchAnnouncements(page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {
+func (repo *Repository) SearchAnnouncements(ctx context.Context, page, pageSize, minCost, maxCost uint64, order string) ([]models.Announcement, error) {
 	var announcements []models.Announcement
 	var str strings.Builder
 	var params []interface{}
@@ -100,7 +101,7 @@ func (repo *Repository) SearchAnnouncements(page, pageSize, minCost, maxCost uin
 		params = append(params, minCost, maxCost, page, pageSize)
 	}
 
-	rows, err := repo.db.Query(str.String(), params...)
+	rows, err := repo.db.QueryContext(ctx, str.String(), params...)
 	if err != nil {
 		return nil, fmt.Errorf("query error: %s", err.Error())
 	}

@@ -90,7 +90,7 @@ func (a *Api) CreateAnnouncement(w http.ResponseWriter, r *http.Request) {
 
 	userId, _ := r.Context().Value(middleware.UserIDKey).(uint64)
 
-	err = a.core.CreateAnnouncement(&models.Announcement{Header: header, Info: info, Cost: cost, Photo: filename}, userId)
+	err = a.core.CreateAnnouncement(r.Context(), &models.Announcement{Header: header, Info: info, Cost: cost, Photo: filename}, userId)
 	if err != nil {
 		a.log.Errorf("create announcement error: %s", err.Error())
 		response.Status = http.StatusInternalServerError
@@ -114,7 +114,7 @@ func (a *Api) GetAnnouncements(w http.ResponseWriter, r *http.Request) {
 		pageSize = 8
 	}
 
-	announcements, err := a.core.GetAnnouncements(page, pageSize)
+	announcements, err := a.core.GetAnnouncements(r.Context(), page, pageSize)
 	if err != nil {
 		a.log.Errorf("get announcements error: %s", err.Error())
 		response.Status = http.StatusBadRequest
@@ -141,7 +141,7 @@ func (a *Api) GetAnnouncement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	announcement, err := a.core.GetAnnouncement(annId)
+	announcement, err := a.core.GetAnnouncement(r.Context(), annId)
 	if err != nil {
 		a.log.Error("Get announcement error: ", err.Error())
 		response.Status = http.StatusBadRequest
@@ -182,7 +182,7 @@ func (a *Api) SearchAnnouncements(w http.ResponseWriter, r *http.Request) {
 		order = "date"
 	}
 
-	announcements, err := a.core.SearchAnnouncements(page, pageSize, minCost, maxCost, order)
+	announcements, err := a.core.SearchAnnouncements(r.Context(), page, pageSize, minCost, maxCost, order)
 	if err != nil {
 		a.log.Error("Search announcements error: ", err.Error())
 		response.Status = http.StatusBadRequest
